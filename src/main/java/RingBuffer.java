@@ -51,4 +51,13 @@ public class RingBuffer<T> {
     public T get(long index) {
        return (T) ringBuffer[(int)index % bufferSize];
     }
+
+    /**
+     * Performs publishing of ready for consumption entity,
+     * this call includes storestore barrier all stores before this call happens before
+     * @param sequenceValue
+     */
+    public void publish(long sequenceValue) {
+        sequencer.publish(sequenceValue);
+    }
 }

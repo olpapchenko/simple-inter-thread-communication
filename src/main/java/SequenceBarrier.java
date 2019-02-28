@@ -12,7 +12,7 @@ public class SequenceBarrier {
     public long waitFor(long index) {
         long availableSequence = producerSequence.get();
         while(index > availableSequence) {
-            //busy spin
+            availableSequence = producerSequence.get();
         }
 
         return availableSequence;
