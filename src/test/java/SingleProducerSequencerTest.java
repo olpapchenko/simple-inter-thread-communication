@@ -55,18 +55,20 @@ public class SingleProducerSequencerTest {
         //when
 
         //start consumer thread
-        AtomicInteger consumerIdx = new AtomicInteger(0);
         AtomicBoolean allEntriesConsumed = new AtomicBoolean();
 
-        Future<?> consumerSequence = Executors.newSingleThreadExecutor().submit(() -> {
+        Sequence consumerSequence = new Sequence(0);
+        Future<?> consumerFuture = Executors.newSingleThreadExecutor().submit(() -> {
+            long nextIdx = consumerSequence.get();
 
-            while (consumerIdx.get() < bufferSize) {
+            while (nextIdx < bufferSize) {
                 //wait producer
-                while (consumerIdx.get() != sequencer.getProducerSequence().get()) {
+                while (nextIdx != sequencer.getProducerSequence().get()) {
                     // busy spin
                 }
-                assertEquals(consumerIdx.get(), value.value);
-                consumerIdx.incrementAndGet();
+                assertEquals(nextIdx, value.value);
+                nextIdx++;
+                consumerSequence.set(nextIdx);
             }
 
             allEntriesConsumed.set(true);
@@ -80,13 +82,13 @@ public class SingleProducerSequencerTest {
 
             while (producerSequenceIndex < bufferSize) {
                 //wait consumer
-                while (consumerIdx.get() != producerSequenceIndex) {
+                while (consumerSequence.get() != producerSequenceIndex) {
                     //busy spin
                 }
                 value.value = producerSequenceIndex;
 
-                //storestore barrier - value.value should happen before
-                producerSequence.set(producerSequenceIndex);
+                //storestore barrier - assign to value.value should happen before
+                sequencer.publish(producerSequenceIndex);
                 producerSequenceIndex++;
             }
             threadsCompletionFlag.incrementAndGet();
@@ -95,9 +97,9 @@ public class SingleProducerSequencerTest {
         //then
 
 
-        Thread.sleep(100);
+        Thread.sleep(500);
         producerFeature.cancel(true);
-        consumerSequence.cancel(true);
+        consumerFuture.cancel(true);
         assertTrue(allEntriesConsumed.get());
         assertEquals(2, threadsCompletionFlag.get());
     }

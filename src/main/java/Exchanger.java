@@ -21,7 +21,7 @@ public class Exchanger<T> {
      */
     public void addEventHandler(Consumer<T> eventHandler) {
         if (started) {
-            throw new IllegalStateException("Disruptor already started, can not add event handler");
+            throw new IllegalStateException("Exchanger already started, can not add event handler");
         }
         this.eventHandlers.add(eventHandler);
     }
@@ -32,7 +32,7 @@ public class Exchanger<T> {
      */
     public RingBuffer<T> start() {
         if (started) {
-            throw new IllegalStateException("Disruptor already started");
+            throw new IllegalStateException("Exchanger already started");
         }
         started = true;
         Sequencer sequencer = this.ringBuffer.getSequencer();
@@ -41,7 +41,7 @@ public class Exchanger<T> {
         eventHandlers.forEach(tConsumer -> {
             Sequence consumerSequence = new Sequence();
             sequencer.addGatingSequence(consumerSequence);
-            executorService.execute(new EventProcessor<T>(consumerSequence,
+            executorService.execute(new EventProcessor<>(consumerSequence,
                     tConsumer,
                     producerSequenceBarrier,
                     this.ringBuffer));
