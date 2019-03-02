@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/rocketmannot/simple-inter-thread-communication.svg?branch=master)](https://travis-ci.org/rocketmannot/simple-inter-thread-communication) [![codecov](https://codecov.io/gh/rocketmannot/simple-inter-thread-communication/branch/master/graph/badge.svg)](https://codecov.io/gh/rocketmannot/simple-inter-thread-communication)
 
 # simple-inter-thread-communication  
 Simple inter-thread communication facility, mimics Disruptor concept. Created for academic purposes.  
