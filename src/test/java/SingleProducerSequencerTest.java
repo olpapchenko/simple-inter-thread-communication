@@ -1,5 +1,6 @@
 import org.junit.Test;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -12,10 +13,9 @@ public class SingleProducerSequencerTest {
     private static final int RING_BUFFER_SIZE = 10;
 
     @Test
-    public void notConsumedEventsAreNotOverride() {
+    public void notConsumedEventsAreNotOverride() throws InterruptedException {
         //given
-        SingleProducerSequencer sequencer = new SingleProducerSequencer(
-                RING_BUFFER_SIZE);
+        SingleProducerSequencer sequencer = new SingleProducerSequencer(RING_BUFFER_SIZE);
         Sequence consumerSequence = new Sequence();
         consumerSequence.set(0);
         sequencer.addGatingSequence(consumerSequence);
@@ -28,6 +28,7 @@ public class SingleProducerSequencerTest {
         }
 
         AtomicBoolean eventConsumed = new AtomicBoolean();
+        CountDownLatch consumerLatch = new CountDownLatch(1);
         Executors.newSingleThreadExecutor().submit(() -> {
             try {
                 Thread.sleep(100);
@@ -36,8 +37,10 @@ public class SingleProducerSequencerTest {
             }
             consumerSequence.set(1);
             eventConsumed.set(true);
+            consumerLatch.countDown();
         });
 
+        consumerLatch.await();
         long next = sequencer.next();
         assertTrue(eventConsumed.get());
         assertEquals(RING_BUFFER_SIZE, next);
